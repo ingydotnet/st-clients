@@ -112,8 +112,14 @@ EOT
     }
 
     if ($opts{password} and $opts{password} =~ m/^CRYPTED_(.+)/) {
-        my $new_pw = _decrypt($1);
-        $opts{password} = $new_pw;
+        eval 'require Crypt::CBC';
+        if ($@) {
+            delete $opts{password};
+        }
+        else {
+            my $new_pw = _decrypt($1);
+            $opts{password} = $new_pw;
+        }
     }
     return %opts;
 }
