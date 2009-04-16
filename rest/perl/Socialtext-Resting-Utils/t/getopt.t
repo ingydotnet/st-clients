@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 use strict;
 use warnings;
-use Test::More tests => 32;
+use Test::More tests => 37;
 
 BEGIN {
     use_ok 'Socialtext::Resting::Getopt', 'get_rester';
@@ -34,10 +34,26 @@ sub run_ok {
     );
     my @tests = @_;
 
+    open(my $fh, ">t/rester.conf") or die;
+    print $fh <<EOT;
+username  = user-name
+password  = pass-word
+workspace = work-space
+server    = http://socialtext.net
+class     = Socialtext::Resting::Mock
+EOT
+    close $fh or die;
     my $prog = "$^X t/getopt-test.pl --rester-config=t/rester.conf";
-    my $output = qx($prog $args 2>&1);
+    my $output = qx($prog $args);
     for my $f (keys %args) {
-        like $output, qr/$f=$args{$f}/i;
+        like $output, qr/$f=$args{$f}/i, $f;
+    }
+    {
+        local $/ = undef;
+        open($fh, 't/rester.conf') or die;
+        my $contents = <$fh>;
+        close $fh;
+        like $contents, qr/password = CRYPTED_\S+/, 'password was crypted';
     }
 }
 

@@ -2,6 +2,7 @@ package Socialtext::Resting::DefaultRester;
 use strict;
 use warnings;
 use Socialtext::Resting;
+use Sys::Hostname qw/hostname/;
 
 =head1 NAME
 
@@ -54,6 +55,9 @@ The config file is expected to be in the following format:
   username = your-user
   password = your-password
 
+Your password will become crypted the first time it is loaded if Crypt::CBC
+is installed.
+
 =cut
 
 my $home = $ENV{HOME} || "~";
@@ -101,8 +105,56 @@ EOT
             $opts{$key} = $val;
         }
     }
-    close $fh;
+
+    if (-w $file and $opts{password} and $opts{password} !~ /^CRYPTED_/) {
+        _change_password($file, $opts{password});
+        return _load_config($file);
+    }
+
+    if ($opts{password} and $opts{password} =~ m/^CRYPTED_(.+)/) {
+        my $new_pw = _decrypt($1);
+        $opts{password} = $new_pw;
+    }
     return %opts;
+}
+
+sub _change_password {
+    my $file = shift;
+    eval 'require Crypt::CBC';
+    return if $@;
+
+    my $old_pw = shift;
+
+    my $new_pw = 'CRYPTED_' . _encrypt($old_pw);
+
+    local $/ = undef;
+    open(my $fh, $file) or die "Can't open $file: $!";
+    my $contents = <$fh>;
+    $contents =~ s/password\s*=\s*\Q$old_pw\E/password = $new_pw/m;
+    close $fh;
+    open(my $wfh, ">$file") or die "Can't open $file for writing: $!";
+    print $wfh $contents;
+    close $wfh or die "Can't write $file: $!";
+}
+
+sub _encrypt {
+    my $from = shift;
+    my $crypt = Crypt::CBC->new(
+        -key => hostname(),
+        -salt => 1,
+        -header => 'salt',
+    );
+    return $crypt->encrypt_hex($from);
+}
+
+sub _decrypt {
+    my $from = shift;
+    my $crypt = Crypt::CBC->new(
+        -key => hostname(),
+        -salt => 1,
+        -header => 'salt',
+    );
+    return $crypt->decrypt_hex($from);
 }
 
 =head1 AUTHOR
