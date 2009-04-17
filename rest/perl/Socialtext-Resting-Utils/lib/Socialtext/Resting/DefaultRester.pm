@@ -107,8 +107,7 @@ EOT
     }
 
     if (-w $file and $opts{password} and $opts{password} !~ /^CRYPTED_/) {
-        _change_password($file, $opts{password});
-        return _load_config($file);
+        _change_password($file, $opts{password}) or return _load_config($file);
     }
 
     if ($opts{password} and $opts{password} =~ m/^CRYPTED_(.+)/) {
@@ -127,7 +126,7 @@ EOT
 sub _change_password {
     my $file = shift;
     eval 'require Crypt::CBC';
-    return if $@;
+    return 0 if $@;
 
     my $old_pw = shift;
 
@@ -141,6 +140,7 @@ sub _change_password {
     open(my $wfh, ">$file") or die "Can't open $file for writing: $!";
     print $wfh $contents;
     close $wfh or die "Can't write $file: $!";
+    return 1;
 }
 
 sub _encrypt {
