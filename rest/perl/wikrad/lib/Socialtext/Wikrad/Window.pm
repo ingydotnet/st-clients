@@ -5,6 +5,7 @@ use base 'Curses::UI::Window';
 use Curses qw/KEY_ENTER/;
 use Socialtext::Wikrad qw/$App/;
 use Socialtext::Resting;
+use Socialtext::EditPage;
 use JSON;
 use Data::Dumper;
 
@@ -33,7 +34,7 @@ sub new {
     $v->set_binding( \&search,                   's' );
 
     $v->set_binding( sub { editor() },                  'e' );
-    $v->set_binding( sub { editor('--pull-includes') }, 'E' );
+    $v->set_binding( sub { editor(pull_includes => 1) }, 'E' );
     $v->set_binding( sub { $v->focus },                 'v' );
     $v->set_binding( sub { $p->focus; $self->{cb}{page}->($p) },      'p' );
     $v->set_binding( sub { $w->focus; $self->{cb}{workspace}->($w) }, 'w' );
@@ -158,7 +159,7 @@ sub new_blog_post {
     $App->{cui}->nostatus;
 
     $App->set_page($page_name);
-    editor( map { ('--tag', $_) } @tags );
+    editor( tags => @tags );
 }
 
 sub show_uri {
@@ -275,17 +276,40 @@ sub choose_link {
 }
 
 sub editor {
-    my @extra_args = @_;
+    my %extra_args = @_;
     $App->{cui}->status('Editing page');
     $App->{cui}->leave_curses;
-    my $r = $App->{rester};
+    my $tags = delete $extra_args{tags};
+
+    my $ep = Socialtext::EditPage->new( 
+        rester => $App->{rester},
+        %extra_args,
+    );
     my $page = $App->get_page;
-    my $server = $r->server;
-    system("wikedit", '-s', $server,
-                      '-u', $r->username,
-                      '-p', $r->password,
-                      '-w', $r->workspace,
-                      @extra_args, $page);
+    $ep->edit_page(
+        page => $page,
+        ($tags ? (tags => $tags) : ()),
+        summary_callback => sub {
+            $App->{cui}->reset_curses;
+
+            my $question = q{Edit summary? (Put '* ' at the front to }
+                         . q{also signal it!).};
+            my $summary = $App->{cui}->question($question);
+            if ($summary and $summary =~ s/^\*\s//) {
+                eval { # server may not support it, so fail silently.
+                    my $wksp = $App->{rester}->workspace;
+                    my $signal = qq{"$summary" (edited {link: $wksp [$page]})};
+                    $App->{cui}->status('Squirelling away signal');
+                    $App->{rester}->post_signal($signal);
+                };
+                warn $@ if $@;
+            }
+
+            $App->{cui}->leave_curses;
+            return $summary;
+        },
+    );
+
     $App->{cui}->reset_curses;
     $App->load_page;
 }

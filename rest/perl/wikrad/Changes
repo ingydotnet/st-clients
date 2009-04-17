@@ -1,5 +1,8 @@
 Changelog:
 
+0.07 - not yet released
+ - you are prompted to enter an edit summary now
+
 0.06 - Fri Feb 22 18:08:34 PST 2008
  - Don't ass-u-me black background
  - Use a wikrad user agent string
