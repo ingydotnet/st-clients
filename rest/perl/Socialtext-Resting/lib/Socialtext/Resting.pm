@@ -628,12 +628,13 @@ sub _get_things {
         for my $q ( keys %{ $replacements{_query} } ) {
             push @params, "$q=" . $replacements{_query}->{$q};
         }
-        my $query = join( ';', @params );
-        if ( $uri =~ /\?/ ) {
-            $uri .= ";$query";
-        }
-        else {
-            $uri .= "?$query";
+        if (my $query = join( ';', @params )) {
+            if ( $uri =~ /\?/ ) {
+                $uri .= ";$query";
+            }
+            else {
+                $uri .= "?$query";
+            }
         }
     }
 
