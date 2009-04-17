@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 use strict;
 use warnings;
-use Test::More qw/no_plan/;
+use Test::More tests => 135;
 use Test::Mock::LWP;
 
 BEGIN {
@@ -118,6 +118,35 @@ Put_existing_page: {
             ],
             [ 'header' => 'Content-Type', 'text/x.socialtext-wiki' ],
             [ 'content' => 'bar' ],
+        ],
+        resp_calls => [
+            [ 'code' ],
+            [ 'content' ],
+        ],
+    );
+}
+
+
+Put_existing_page_json: {
+    my $rester = new_strutter();
+    $Mock_resp->set_always('code', 204);
+    $rester->put_page(
+        'Foo' => {
+            content => 'bar',
+        }
+    );
+    result_ok(
+        uri  => '/pages/Foo',
+        method => 'PUT',
+        ua_calls => [
+            [ 'simple_request' => $Mock_req ],
+        ],
+        req_calls => [
+            [ 'authorization_basic' => $rester_opts{username}, 
+              $rester_opts{password},
+            ],
+            [ 'header' => 'Content-Type', 'application/json' ],
+            [ 'content' => '{"content":"bar"}' ],
         ],
         resp_calls => [
             [ 'code' ],
