@@ -9,7 +9,7 @@ WriteMakefile(
     ABSTRACT_FROM       => 'lib/Socialtext/Resting/Utils.pm',
     PL_FILES            => {},
     PREREQ_PM => {
-        'Socialtext::Resting' => '0.26',
+        'Socialtext::Resting' => '0.27',
         'Test::More'          => 0,
         'Test::Mock::LWP'     => 0,
         'Getopt::Long'        => '2.36',

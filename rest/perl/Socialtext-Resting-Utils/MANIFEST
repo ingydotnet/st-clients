@@ -38,3 +38,4 @@ t/pre-block.t
 t/table-config.t
 t/tagged-pages.t
 t/wiki-localcopy.t
+META.yml                                 Module meta-data (added by MakeMaker)

@@ -8,7 +8,7 @@ Standards-Version: 3.6.1
 
 Package: libsocialtext-resting-utils-perl
 Architecture: all
-Depends: ${perl:Depends}, ${misc:Depends}, libsocialtext-resting-perl
+Depends: ${perl:Depends}, ${misc:Depends}, libsocialtext-resting-perl >= 0.27-6
 Description:  Represent wiki markup as a data structure and object
  .
  .
