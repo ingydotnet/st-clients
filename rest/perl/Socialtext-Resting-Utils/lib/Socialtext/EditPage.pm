@@ -76,6 +76,11 @@ If supplied, callback will be called after the page has been edited.  This
 function will be passed the edited content, and should return the content to
 be put onto the server.
 
+=item summary_callback
+
+If supplied, callback will be called after the page has been edit.  This 
+function should return the edit summary text for this edit, if desired.
+
 =item tags 
 
 If supplied, these tags will be applied to the page after it is updated.
@@ -123,6 +128,7 @@ sub edit_page {
     }
 
     my $orig_content = $content;
+    my $edit_summary;
     while (1) {
         my $new_content = $content;
         $new_content = $self->_pre_process_special_wafls($new_content);
@@ -137,9 +143,16 @@ sub edit_page {
 
         $new_content = $self->_process_special_wafls($new_content);
 
+        $edit_summary ||= $args{summary_callback}->() if $args{summary_callback};
+
         eval { 
             $page =~ s#/#-#g; # cannot have /'s in the page name
-            $rester->put_page($page, $new_content);
+            $rester->put_page($page, {
+                    content => $new_content,
+                    date => scalar(localtime),
+                    ($edit_summary ? (edit_summary => $edit_summary) : ()),
+                }
+            );
         };
         last unless $@;
         if ($@ =~ /412/) { # collision detected!

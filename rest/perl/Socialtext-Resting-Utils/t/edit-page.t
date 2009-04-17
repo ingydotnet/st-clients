@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 use strict;
 use warnings;
-use Test::More tests => 32;
+use Test::More tests => 34;
 use lib 'lib';
 use JSON::XS;
 
@@ -20,7 +20,7 @@ Regular_edit: {
     my $ep = Socialtext::EditPage->new(rester => $r);
     $ep->edit_page(page => 'Foo');
 
-    is $r->get_page('Foo'), 'MONKEY';
+    is $r->get_page('Foo')->{content}, 'MONKEY';
 }
 
 Edit_no_change: {
@@ -42,7 +42,23 @@ Edit_with_callback: {
     my $cb = sub { return "Ape\n\n" . shift };
     $ep->edit_page(page => 'Foo', callback => $cb);
 
-    is $r->get_page('Foo'), "Ape\n\nMONKEY";
+    is $r->get_page('Foo')->{content}, "Ape\n\nMONKEY";
+}
+
+Edit_with_edit_summary_callback: {
+    my $r = Socialtext::Resting::Mock->new;
+    $r->put_page('Foo', 'Monkey');
+
+    my $ep = Socialtext::EditPage->new(rester => $r);
+    $ep->edit_page(
+        page => 'Foo', 
+        callback => sub { return "Ape\n\n" . shift },
+        summary_callback => sub {'o hai'},
+    );
+
+    my $page = $r->get_page('Foo');
+    is $page->{content}, "Ape\n\nMONKEY";
+    is $page->{edit_summary}, 'o hai';
 }
 
 Edit_with_tag: {
@@ -52,7 +68,7 @@ Edit_with_tag: {
     my $ep = Socialtext::EditPage->new(rester => $r);
     $ep->edit_page(page => 'Foo', tags => 'Chimp');
 
-    is $r->get_page('Foo'), 'MONKEY';
+    is $r->get_page('Foo')->{content}, 'MONKEY';
     is_deeply [$r->get_pagetags('Foo')], ['Chimp'];
 }
 
@@ -64,7 +80,7 @@ Edit_with_tags: {
     my $tags = [qw(one two three)];
     $ep->edit_page(page => 'Foo', tags => $tags);
 
-    is $r->get_page('Foo'), 'MONKEY';
+    is $r->get_page('Foo')->{content}, 'MONKEY';
     is_deeply [ $r->get_pagetags('Foo') ], $tags;
 }
 
@@ -88,7 +104,7 @@ MONKEY
 APE
 >>>>>>> NEW EDIT
 EOT
-    is $r->get_page('Foo'), $expected_page;
+    is $r->get_page('Foo')->{content}, $expected_page;
   }
 }
 
@@ -106,7 +122,7 @@ Extraclude: {
     my $ep = Socialtext::EditPage->new(rester => $r);
     $ep->edit_page(page => 'Foo');
 
-    is $r->get_page('Foo'), <<EOT;
+    is $r->get_page('Foo')->{content}, <<EOT;
 Monkey
 {include: [Foo Bar]}
 {include: [Bar Baz]}
@@ -129,7 +145,7 @@ Extralink: {
     my $ep = Socialtext::EditPage->new(rester => $r);
     $ep->edit_page(page => 'Foo');
 
-    is $r->get_page('Foo'), <<EOT;
+    is $r->get_page('Foo')->{content}, <<EOT;
 Monkey
 [Foo Bar]
 [Bar Baz]
@@ -152,7 +168,7 @@ EOT
     $ep->edit_page(page => 'Foo');
 
     # $EDITOR will uc() everything
-    is $r->get_page('Foo'), <<EOT;
+    is $r->get_page('Foo')->{content}, <<EOT;
 MONKEY
 .extraclude [FOO BAR]
 COWS
@@ -175,7 +191,7 @@ EOT
     $ep->edit_page(page => 'Foo');
 
     # $EDITOR will uc() everything
-    is $r->get_page('Foo'), <<EOT;
+    is $r->get_page('Foo')->{content}, <<EOT;
 THIS AND
 {include: [BAR]}
 {include: [BAZ DEFRENS]}
@@ -205,7 +221,7 @@ Edit_last_page: {
     $ep->edit_last_page(tag => 'coffee');
 
     # $EDITOR will uc() everything
-    is $r->get_page('Newer'), 'NEWER';
+    is $r->get_page('Newer')->{content}, 'NEWER';
     is $r->get_page('Older'), 'Older';
 }
 
@@ -222,7 +238,7 @@ Edit_from_template: {
         template => 'Pookie',
     );
 
-    is $r->get_page('Empty'), 'TEMPLATE PAGE';
+    is $r->get_page('Empty')->{content}, 'TEMPLATE PAGE';
     is_deeply [$r->get_pagetags('Empty')], ['Pumpkin'];
 }
 
@@ -238,7 +254,7 @@ Template_when_page_already_exists: {
         template => 'Pookie',
     );
 
-    is $r->get_page('Foo'), 'MONKEY';
+    is $r->get_page('Foo')->{content}, 'MONKEY';
 }
 
 Failed_Edit: {
