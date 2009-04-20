@@ -1,5 +1,8 @@
 Revision history for Socialtext-Utils
 
+0.19 - Mon Apr 20 11:22:58 PDT 2009
+  - s/localtime/gmtime/ when posting pages
+
 0.18 - Fri Apr 17 15:44:03 PDT 2009
   - Added stu-tagged-pages utility
   - stu-most-wanted won't update the page if it didn't change.

@@ -149,7 +149,7 @@ sub edit_page {
             $page =~ s#/#-#g; # cannot have /'s in the page name
             $rester->put_page($page, {
                     content => $new_content,
-                    date => scalar(localtime),
+                    date => scalar(gmtime),
                     ($edit_summary ? (edit_summary => $edit_summary) : ()),
                 }
             );
