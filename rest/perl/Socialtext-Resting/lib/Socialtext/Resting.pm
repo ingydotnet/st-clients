@@ -73,6 +73,7 @@ Readonly my %ROUTES   => (
 field 'workspace';
 field 'username';
 field 'password';
+field 'user_cookie';
 field 'server';
 field 'verbose';
 field 'accept';
@@ -95,8 +96,15 @@ field 'agent_string';
         server   => $opts{server},
     );
 
+    or
+
+    my $Rester = Socialtext::Resting->new(
+        user_cookie => $opts{user_cookie},
+        server      => $opts{server},
+    );
+
 Creates a Socialtext::Resting object for the specified
-server/user/password combination.
+server/user/password, or server/cookie combination.
 
 =cut
 
@@ -1085,7 +1093,11 @@ sub _request {
     warn "uri: $uri\n" if $self->verbose;
 
     my $request = HTTP::Request->new( $p{method}, $uri );
-    $request->authorization_basic( $self->username, $self->password );
+    if ( $self->user_cookie ) {
+        $request->header( 'Cookie' => 'NLW-user=' . $self->user_cookie );
+    } else {
+        $request->authorization_basic( $self->username, $self->password );
+    }
     $request->header( 'Accept'       => $p{accept} )   if $p{accept};
     $request->header( 'Content-Type' => $p{type} )     if $p{type};
     $request->header( 'If-Match'     => $p{if_match} ) if $p{if_match};

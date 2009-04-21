@@ -58,6 +58,12 @@ The config file is expected to be in the following format:
 Your password will become crypted the first time it is loaded if Crypt::CBC
 is installed.
 
+Alternately, you can use this format:
+
+  server = your-server
+  workspace = some-workspace
+  user_cookie = an-NLW-user-cookie
+
 =cut
 
 my $home = $ENV{HOME} || "~";
