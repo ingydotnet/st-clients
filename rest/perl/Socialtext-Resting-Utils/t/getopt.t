@@ -53,7 +53,11 @@ EOT
         open($fh, 't/rester.conf') or die;
         my $contents = <$fh>;
         close $fh;
-        like $contents, qr/password = CRYPTED_\S+/, 'password was crypted';
+        eval 'require Crypt::CBC';
+        SKIP: {
+            skip "no Crypt::CBC", 1 if $@;
+            like $contents, qr/password = CRYPTED_\S+/, 'pw was crypted';
+        }
     }
 }
 
