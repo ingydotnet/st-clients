@@ -2,6 +2,7 @@ Revision history for Socialtext-Utils
 
 0.20 - Tue Apr 21 13:46:23 PDT 2009
   - Add ability to use an NLW-user cookie instead of user/pass.
+  - Bugfixes to better work with and without Crypt::CBC
 
 0.19 - Mon Apr 20 11:22:58 PDT 2009
   - s/localtime/gmtime/ when posting pages
