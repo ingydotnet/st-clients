@@ -81,12 +81,15 @@ Pull_by_tag: {
 
 exit;
 
-sub _make_tempdir {
-    my $dir = "t/localstore.$$";
-    rmtree $dir if -d $dir;
-    mkpath $dir;
-    END { rmtree $dir if $dir and -d $dir }
-    return $dir;
+{
+    my $dir;
+    sub _make_tempdir {
+        $dir = "t/localstore.$$";
+        rmtree $dir if -d $dir;
+        mkpath $dir;
+        END { rmtree $dir if $dir and -d $dir }
+        return $dir;
+    }
 }
 
 sub _setup_rester {
