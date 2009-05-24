@@ -88,7 +88,8 @@ sub new {
 }
 
 sub _load_config {
-    my $file = shift;
+    my $file       = shift;
+    my $second_try = shift;
 
     unless (-e $file) {
         open(my $fh, ">$file") or die "Can't open $file: $!";
@@ -112,8 +113,10 @@ EOT
         }
     }
 
-    if (-w $file and $opts{password} and $opts{password} !~ /^CRYPTED_/) {
-        _change_password($file, $opts{password}) or return _load_config($file);
+    my $pw = $opts{password};
+    if (!$second_try and -w $file and $pw and $pw !~ /^CRYPTED_/) {
+        _change_password($file, $opts{password})
+            or return _load_config($file, 'i already tried once');
     }
 
     if ($opts{password} and $opts{password} =~ m/^CRYPTED_(.+)/) {
