@@ -15,6 +15,7 @@ WriteMakefile(
         'Getopt::Long'        => '2.36',
         'JSON::XS'            => '2.1',
         'YAML'                => 0,
+        'Crypt::CBC'          => 0,
         },
     EXE_FILES           => [
         'bin/wikedit', 
