@@ -48,6 +48,7 @@ Readonly my %ROUTES   => (
     pages          => $BASE_WS_URI . '/:ws/pages',
     pagetag        => $BASE_WS_URI . '/:ws/pages/:pname/tags/:tag',
     pagetags       => $BASE_WS_URI . '/:ws/pages/:pname/tags',
+    pagetaghistory => $BASE_WS_URI . '/:ws/pages/:pname/taghistory',
     pagecomments   => $BASE_WS_URI . '/:ws/pages/:pname/comments',
     pageattachment => $BASE_WS_URI
         . '/:ws/pages/:pname/attachments/:attachment_id',
@@ -593,6 +594,22 @@ sub get_revisions {
     my $pname = shift;
 
     return $self->_get_things( 'revisions', pname => $pname );
+}
+
+=head2 get_taghistory
+
+    $Rester->workspace('wikiname');
+    $Rester->get_taghistory($page)
+
+Get a history, by revision, of all tags for a page.
+
+=cut
+
+sub get_taghistory {
+    my $self = shift;
+    my $pname = shift;
+
+    return $self->_get_things( 'pagetaghistory', pname => $pname );
 }
 
 sub _extend_uri {

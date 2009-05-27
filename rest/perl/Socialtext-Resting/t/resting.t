@@ -5,7 +5,7 @@ use IPC::Run;
 use strict;
 use warnings;
 
-plan tests => 17;
+plan tests => 18;
 
 # Put the page
 my $strut_user = 'rest-tester@socialtext.com';
@@ -74,6 +74,16 @@ SKIP: {
         $wksp = $r->get_workspace();
         is $wksp->{name}, 'st-rest-test';
     }
+
+    Get_TagHistory: {
+        my $r = new_strutter();
+        $r->put_pagetag("Test page", "Tag 1");
+        $r->put_pagetag("Test page", "Tag 2");
+
+        my $history = $r->get_taghistory('Test page');
+        like($history, qr/Tags:.*Tag 1/, 'Has tag history');
+    }
+
 }
 
 Name_to_id: {
