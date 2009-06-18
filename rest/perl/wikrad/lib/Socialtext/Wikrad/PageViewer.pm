@@ -183,7 +183,7 @@ sub draw_text(;$)
                 my ($char, $attr) = @_;
                 my $backchar = reverse $char;
                 return {
-                    regex => qr/^(.*?\s)?(\Q$char\E\S.+?\S\Q$backchar\E\s)(.*)/,
+                    regex => qr/^(.*?\s)?(\Q$char\E\S.+\S\Q$backchar\E\s?)(.*)/,
                     cb => sub {
                         my ($i, @matches) = @_;
                         $replace_segment->($i, @matches[0, 1], $attr, $matches[2]);
