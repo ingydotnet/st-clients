@@ -74,7 +74,6 @@ sub init {
     $self->{selenium_timeout} ||= 10000;
 
     $self->remove_selenium_frame if $self->{maximize};
-    $self->setup_table_variables;
 }
 
 =head2
@@ -181,25 +180,6 @@ sub _try_condition {
 
     my $cmd = "try { $condition('$arg') ? true : false } catch(e) { false }";
     $self->{selenium}->wait_for_condition_ok($cmd, $timeout);
-}
-
-=head2 quote_as_regex( $option )
-
-Will convert an option to a regex.  If qr// is around the option text,
-the regex will not be escaped.  Be careful with your regexes.
-
-=cut
-
-sub quote_as_regex {
-    my $self = shift;
-    my $var = shift || '';
-
-    Encode::_utf8_on($var) unless Encode::is_utf8($var);
-    if ($var =~ qr{^qr/(.+?)/([imosx]*)$}) {
-        my $mods = $2 || 's';
-        return eval "qr/$1/$mods";
-    }
-    return qr/\Q$var\E/;
 }
 
 =head2 click_and_wait()

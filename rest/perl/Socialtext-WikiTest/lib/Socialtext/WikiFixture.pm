@@ -40,6 +40,7 @@ sub new {
     bless $self, $class;
 
     $self->init;
+    $self->setup_table_variables;
 
     return $self;
 }
@@ -50,11 +51,7 @@ Optional initialization hook for subclasses.  Called from new().
 
 =cut
 
-sub init {
-    my $self = shift;
-
-    $self->setup_table_variables;
-}
+sub init { }
 
 =head2 run_test_table( $table_ref )
 
@@ -132,6 +129,25 @@ sub _munge_options {
         push @opts, $var;
     }
     return @opts;
+}
+
+=head2 quote_as_regex( $option )
+
+Will convert an option to a regex.  If qr// is around the option text,
+the regex will not be escaped.  Be careful with your regexes.
+
+=cut
+
+sub quote_as_regex {
+    my $self = shift;
+    my $var = shift || '';
+
+    Encode::_utf8_on($var) unless Encode::is_utf8($var);
+    if ($var =~ qr{^qr/(.+?)/([imosx]*)$}) {
+        my $mods = $2 || 's';
+        return eval "qr/$1/$mods";
+    }
+    return qr/\Q$var\E/;
 }
 
 =head2 setup_table_variables
