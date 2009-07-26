@@ -14,7 +14,7 @@ WriteMakefile(
         'Test::Exception'            => 0,
         'mocked'                     => 0,
         },
-    EXE_FILES           => ['bin/wiki-prv'],
+    EXE_FILES           => ['bin/wiki-prove'],
     dist                => { COMPRESS => 'gzip -9f', SUFFIX => 'gz', },
     clean               => { FILES => 'Socialtext-WikiTest-*' },
 );
