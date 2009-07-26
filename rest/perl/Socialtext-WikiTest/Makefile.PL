@@ -10,11 +10,11 @@ WriteMakefile(
     PREREQ_PM => {
         'Socialtext::Resting'        => 0,
         'Socialtext::Resting::Utils' => 0.04,
-        'Test::More'                 => 0,
+        'Test::More'                 => 0.92,
         'Test::Exception'            => 0,
         'mocked'                     => 0,
         },
-    EXE_FILES           => [],
+    EXE_FILES           => ['bin/wiki-prv'],
     dist                => { COMPRESS => 'gzip -9f', SUFFIX => 'gz', },
     clean               => { FILES => 'Socialtext-WikiTest-*' },
 );

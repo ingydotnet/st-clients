@@ -1,0 +1,38 @@
+#!/usr/bin/perl
+use strict;
+use warnings;
+use Socialtext::Resting::Getopt qw/get_rester/;
+use Socialtext::WikiObject::TestPlan;
+use Getopt::Long;
+use Sys::Hostname qw/hostname/;
+use Test::More;
+
+my $base_url = "http://" . hostname();
+GetOptions(
+    'base-url=s' => \$base_url,
+) or usage();
+
+my $page = shift;
+
+my $rester = get_rester();
+my $test_plan = Socialtext::WikiObject::TestPlan->new(
+    rester => $rester,
+    page => $page,
+    default_fixture => 'HTTP',
+    fixture_args => {
+        base_url => $base_url,
+    },
+);
+$test_plan->run_tests;
+
+done_testing();
+
+exit;
+
+sub usage {
+    die <<EOT;
+USAGE: wiki-prv [--base-url=http://yourhost] [rester opts] 'Page Name'
+
+See `perldoc Socialtext::Resting::Getopt` for details on rester opts.
+EOT
+}

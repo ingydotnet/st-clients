@@ -1,7 +1,6 @@
 package Socialtext::WikiFixture;
 use strict;
 use warnings;
-use Test::WWW::Selenium;
 use Test::More;
 
 =head1 NAME
@@ -129,25 +128,6 @@ sub _munge_options {
         push @opts, $var;
     }
     return @opts;
-}
-
-=head2 quote_as_regex( $option )
-
-Will convert an option to a regex.  If qr// is around the option text,
-the regex will not be escaped.  Be careful with your regexes.
-
-=cut
-
-sub quote_as_regex {
-    my $self = shift;
-    my $var = shift || '';
-
-    Encode::_utf8_on($var) unless Encode::is_utf8($var);
-    if ($var =~ qr{^qr/(.+?)/([imosx]*)$}) {
-        my $mods = $2 || 's';
-        return eval "qr/$1/$mods";
-    }
-    return qr/\Q$var\E/;
 }
 
 =head2 setup_table_variables

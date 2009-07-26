@@ -2,6 +2,7 @@ package Socialtext::WikiFixture::Selenese;
 use strict;
 use warnings;
 use base 'Socialtext::WikiFixture';
+use Test::WWW::Selenium;
 use Encode;
 use Test::More;
 use Carp qw(croak);
