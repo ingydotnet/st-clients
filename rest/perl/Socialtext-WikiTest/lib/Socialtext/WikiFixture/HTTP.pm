@@ -1,11 +1,8 @@
 package Socialtext::WikiFixture::HTTP;
-use strict;
-use warnings;
-use base 'Socialtext::WikiFixture';
+use Moose::Role;
 use Encode;
 use Test::More;
 use Test::HTTP;
-use Carp qw(croak);
 
 =head1 NAME
 
@@ -17,13 +14,7 @@ our $VERSION = '0.01';
 
 =head1 DESCRIPTION
 
-This class executes wiki tables using Test::HTTP.  Test tables
-contain 3 columns:
-
-  | *Command* | *Option1* | *Option2* |
-
-This module will attempt to convert selenese into proper calls to
-Test::HTTP.
+This role provides HTTP testing functionality using Test::HTTP.
 
 =head1 FUNCTIONS
 
@@ -45,58 +36,16 @@ Called by the constructor.  Creates a Test::HTTP object.
 
 =cut
 
-sub init {
-    my ($self) = @_;
+has 'http' => (
+    is => 'rw', isa => 'Test::HTTP', 
+    handles => qr/body_\w+|code_\w+|header_\w+/,
+);
 
-    $self->{http} = Test::HTTP->new;
-}
-
-
-=head3 handle_command()
-
-Called by the test plan to execute each command.
-
-=cut
-
-sub handle_command {
+after 'init' => sub {
     my $self = shift;
-    my $sel = $self->{selenium};
-    my $command = $self->_munge_command(shift);
-    my ($opt1, $opt2) = $self->_munge_options(@_);
+    $self->http(Test::HTTP->new);
+};
 
-    if ($command =~ /_(?:un)?like$/) {
-        if ($opt2) {
-            $opt2 = $self->quote_as_regex($opt2);
-        }
-        else {
-            $opt1 = $self->quote_as_regex($opt1);
-        }
-    }
-
-    if ($self->can($command)) {
-        $self->$command($opt1, $opt2);
-    }
-    elsif ($self->{http}->can($command)) {
-        $self->{http}->$command($opt1, $opt2);
-    }
-    else {
-        croak "Unknown command: $command";
-    }
-}
-
-sub _munge_command {
-    my $self = shift;
-    my $command = shift;
-    
-    $command =~ s/-/_/g;
-    return lc $command;
-}
-
-sub comment {
-    my $self = shift;
-    my $comment = shift;
-    $self->{http}->name($comment);
-}
 
 =head2 get ( uri, accept )
 
@@ -111,6 +60,15 @@ sub get {
     $accept ||= 'text/html';
 
     $self->_get($uri, [Accept => $accept, Cookie => $self->{_cookie}]);
+}
+
+sub _get {
+    my ($self, $uri, $opts) = @_;
+    diag "GET: $self->{base_url}$uri\n"; # intentional warn
+    my $start = time();
+    $uri = "$self->{base_url}$uri" if $uri =~ m#^/#;
+    $self->http->get( $uri, $opts );
+    $self->{_last_http_time} = time() - $start;
 }
 
 =head2 cond_get ( uri, accept, ims, inm )
@@ -132,7 +90,7 @@ sub cond_get {
 
     warn "Calling get on $uri";
     my $start = time();
-    $self->{http}->get($self->{base_url} . $uri, \@headers);
+    $self->http->get($self->{base_url} . $uri, \@headers);
     $self->{_last_http_time} = time() - $start;
 }
 
@@ -171,14 +129,14 @@ Check that the return code is correct.
 
 sub code_is {
     my ($self, $code, $msg) = @_;
-    $self->{http}->status_code_is($code);
-    if ($self->{http}->response->code != $code) {
+    $self->http->status_code_is($code);
+    if ($self->http->response->code != $code) {
         warn "Response message: "
-            . ($self->{http}->response->message || 'None')
-            . " url(" . $self->{http}->request->url . ")";
+            . ($self->http->response->message || 'None')
+            . " url(" . $self->http->request->url . ")";
     }
     if ($msg) {
-        like $self->{http}->response->content(), $self->quote_as_regex($msg),
+        like $self->http->response->content(), $self->quote_as_regex($msg),
              "Status content matches";
     }
 }
@@ -191,7 +149,7 @@ Check that the specified header is in the response, with an optional second chec
 
 sub has_header {
     my ($self, $header, $value) = @_;
-    my $hval = $self->{http}->response->header($header);
+    my $hval = $self->http->response->header($header);
     ok $hval, "header $header is defined";
     if ($value) {
         like $hval, $self->quote_as_regex($value), "header content matches";
@@ -267,7 +225,7 @@ sub set_http_keepalive {
     $Test::HTTP::UaClass = $on_off ? 'Test::LWP::UserAgent::keep_alive' : 'LWP::UserAgent';
 
     # re-instantiate our Test::HTTP object
-    delete $self->{http};
+    $self->http( Test::HTTP->new );
     $self->http_user_pass($self->{username}, $self->{password});
 }
 
@@ -281,7 +239,7 @@ sub set_from_content {
     my $self = shift;
     my $name = shift || die "name is mandatory for set-from-content";
     my $regex = $self->quote_as_regex(shift || '');
-    my $content = $self->{http}->response->content;
+    my $content = $self->http->response->content;
     if ($content =~ $regex) {
         if (defined $1) {
             $self->{$name} = $1;
@@ -306,7 +264,7 @@ sub set_from_header {
     my $self = shift;
     my $name = shift || die "name is mandatory for set-from-header";
     my $header = shift || die "header is mandatory for set-from-header";
-    my $content = $self->{http}->response->header($header);
+    my $content = $self->http->response->header($header);
 
     if (defined $content) {
         $self->{$name} = $content;
@@ -331,23 +289,14 @@ sub _call_method {
     $headers ||= [];
     push @$headers, Cookie => $self->{_cookie} if $self->{_cookie};
     my $start = time();
-    $self->{http}->$method($self->{base_url} . $uri, $headers, $body);
-    $self->{_last_http_time} = time() - $start;
-}
-
-sub _get {
-    my ($self, $uri, $opts) = @_;
-    warn "GET: $self->{base_url}$uri\n"; # intentional warn
-    my $start = time();
-    $uri = "$self->{base_url}$uri" if $uri =~ m#^/#;
-    $self->{http}->get( $uri, $opts );
+    $self->http->$method($self->{base_url} . $uri, $headers, $body);
     $self->{_last_http_time} = time() - $start;
 }
 
 sub _delete {
     my ($self, $uri, $opts) = @_;
     my $start = time();
-    $self->{http}->delete( $self->{base_url} . $uri, $opts );
+    $self->http->delete( $self->{base_url} . $uri, $opts );
     $self->{_last_http_time} = time() - $start;
 }
 
@@ -359,13 +308,13 @@ Asserts that a header in the response does not contain the specified value.
 
 sub header_isnt {
     my $self = shift;
-    if ($self->{http}->can('header_isnt')) {
-        return $self->{http}->header_isnt(@_);
+    if ($self->http->can('header_isnt')) {
+        return $self->http->header_isnt(@_);
     }
     else {
         my $header = shift;
         my $expected = shift;
-        my $value = $self->{http}->response->header($header);
+        my $value = $self->http->response->header($header);
         isnt($value, $expected, "header $header");
     }
 }
@@ -378,12 +327,21 @@ Asserts that the response content does not contain the specified value.
 
 sub body_unlike {
     my ($self, $expected) = @_;
-    my $body = $self->{http}->response->content;
+    my $body = $self->http->response->content;
 
     my $re_expected = $self->quote_as_regex($expected);
     unlike $body, $re_expected,
-        $self->{http}->name() . " body-unlike $re_expected";
+        $self->http->name() . " body-unlike $re_expected";
 }
+
+around 'comment' => sub {
+    my $orig = shift;
+    my $self = shift;
+    my $name = shift;
+
+    $orig->($self, $name);
+    $self->http->name($name);
+};
 
 
 

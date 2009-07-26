@@ -1,8 +1,8 @@
 package Socialtext::WikiObject::TestPlan;
-use strict;
-use warnings;
-use base 'Socialtext::WikiObject';
+use Moose;
 use Test::More;
+use Moose::Meta::Class;
+extends 'Socialtext::WikiObject';
 
 =head1 NAME
 
@@ -33,10 +33,11 @@ Test Plans look for a list item at the top level of the page looking like
 this:
 
   * Fixture: Foo
+  * Fixture: Bar
 
-This tells the TestPlan object to create a Socialtext::WikiFixture::Foo
-object and use it to run the tests.  A default fixture can also be specified
-in the constructor.
+This tells the TestPlan object to use the Socialtext::WikiFixture::Foo
+and Socialtext::WikiFixture::Bar roles to supply methods for this test page.
+A default fixture can also be specified in the constructor.
 
 The wiki tests are specified as tables in the top level of the page.
 
@@ -66,17 +67,26 @@ to load the test plan.  The rester should already have a workspace conifgured.
 
 Mandatory - the page containing the test plan.
 
+=cut
+
+has 'fixture_args' => (is => 'rw', isa => 'HashRef[]');
+
 =item fixture_args
 
 A hashref containing arguments to pass through to the fixture constructor.
 
 =back
 
+=cut
+
+has 'fixture' => (is => 'ro', isa => 'Object', lazy_build => 1);
+
 =head2 run_tests()
 
 Execute the tests.
 
 =cut
+
 
 sub run_tests {
     my $self = shift;
@@ -86,22 +96,39 @@ sub run_tests {
         return;
     }
 
-    my $fixture_class = $self->_fixture || $self->{default_fixture};
-    return unless $self->{table} and $fixture_class;
-
-    unless ($fixture_class =~ /::/) {
-        $fixture_class = "Socialtext::WikiFixture::$fixture_class";
-    }
-
-    eval "require $fixture_class";
-    die "Can't load fixture $fixture_class $@\n" if $@;
+    my $fixture = $self->fixture;
+    return unless $self->{table} and $fixture;
 
     $self->_raise_permissions;
 
-    $self->{fixture_args}{testplan} ||= $self;
-    my $fix = $fixture_class->new( %{ $self->{fixture_args} } );
-    $self->{fixture} = $fix;
-    $fix->run_test_table($self->{table});
+    $fixture->run_test_table($self->{table});
+    $fixture->stop;
+}
+
+sub _build_fixture {
+    my $self = shift;
+
+    my @fixtures;
+    for (@{ $self->{items} || [] }) {
+        if (/^fixture:\s*(\S+)/i) {
+        }
+        my $class = $1;
+        $class = "Socialtext::WikiFixture::$class" unless $class =~ m/::/;
+        push @fixtures, $class;
+    }
+    push @fixtures, $self->{default_fixture} unless @fixtures;
+
+    $self->fixture_args->{testplan} ||= $self;
+
+    my $base_class = 'Socialtext::WikiFixture';
+    my $metaclass = Moose::Meta::Class->create_anon_class(
+        superclasses => [ $base_class ],
+        roles => \@fixtures,
+    );
+    my $fixture = $metaclass->new_object( args => $self->fixture_args );
+    $fixture->init;
+
+    return $fixture;
 }
 
 sub _raise_permissions {
@@ -110,22 +137,12 @@ sub _raise_permissions {
         '*firefox' => '*chrome',
         '*iexplore' => '*iehta',
     );
-    my $browser = $self->{fixture_args}{browser};
+    my $browser = $self->fixture_args->{browser};
     for (@{ $self->{items} || [] }) {
         if (/^highpermissions$/i and $browsers{$browser}) {
-            $self->{fixture_args}{browser} = $browsers{$browser};
+            $self->fixture_args->{browser} = $browsers{$browser};
         }
     }
-}
-
-# Find the fixture in the page
-sub _fixture {
-    my $self = shift;
-    for (@{ $self->{items} || [] }) {
-        next unless /^fixture:\s*(\S+)/i;
-        return $1;
-    }
-    return undef;
 }
 
 sub _recurse_testplans {
@@ -149,7 +166,7 @@ sub new_testplan {
         page => $page,
         rester => $self->{rester},
         default_fixture => $self->{default_fixture},
-        fixture_args => $self->{fixture_args},
+        fixture_args => $self->fixture_args,
     );
 }
 
