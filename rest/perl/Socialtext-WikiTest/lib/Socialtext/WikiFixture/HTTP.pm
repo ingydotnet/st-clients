@@ -131,9 +131,12 @@ sub code_is {
     my ($self, $code, $msg) = @_;
     $self->http->status_code_is($code);
     if ($self->http->response->code != $code) {
-        warn "Response message: "
-            . ($self->http->response->message || 'None')
-            . " url(" . $self->http->request->url . ")";
+        warn join(' ', "Response message:",
+              ($self->http->response->message || 'None'),
+              $self->http->request->method,
+              $self->http->request->url,
+              $self->http->response->content) . "\n";
+
     }
     if ($msg) {
         like $self->http->response->content(), $self->quote_as_regex($msg),
