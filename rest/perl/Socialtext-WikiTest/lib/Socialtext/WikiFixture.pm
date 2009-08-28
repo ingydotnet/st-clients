@@ -1,7 +1,8 @@
 package Socialtext::WikiFixture;
-use Moose;
+use strict;
+use warnings;
+use Test::WWW::Selenium;
 use Test::More;
-use Carp qw(croak);
 
 =head1 NAME
 
@@ -33,33 +34,24 @@ Create a new fixture object.  You probably mean to call this on a subclass.
 
 =cut
 
-has 'args' => (is => 'ro', isa => 'HashRef', required => 1);
+sub new {
+    my ($class, %args) = @_;
+    my $self = \%args;
+    bless $self, $class;
+
+    $self->init;
+    $self->setup_table_variables;
+
+    return $self;
+}
 
 =head2 init()
 
-Optional initialization hook for subclasses.  Called by new.
+Optional initialization hook for subclasses.  Called from new().
 
 =cut
 
-sub init {
-    my $self = shift;
-
-    # copy all the args into our base object.  Maybe we'd want to 
-    # tell our metaclass about this someday.
-    for my $key (keys %{ $self->args }) {
-        $self->{$key} = $self->args->{$key};
-    }
-
-    $self->setup_table_variables;
-}
-
-=head2 stop()
-
-Optional hook when the fixture is done.
-
-=cut
-
-sub stop {}
+sub init { }
 
 =head2 run_test_table( $table_ref )
 
@@ -82,44 +74,6 @@ sub run_test_table {
     }
 
     $self->end_hook;
-}
-
-=head3 handle_command()
-
-Called by the test plan to execute each command.
-
-=cut
-
-sub handle_command {
-    my $self = shift;
-    my $command = $self->_munge_command(shift);
-    my ($opt1, $opt2) = $self->_munge_options(@_);
-
-    if ($command =~ /_(?:un)?like$/) {
-        if ($opt2) {
-            $opt2 = $self->quote_as_regex($opt2);
-        }
-        else {
-            $opt1 = $self->quote_as_regex($opt1);
-        }
-    }
-
-    if ($self->can($command)) {
-        $self->$command($opt1, $opt2);
-    }
-    else {
-        croak "Unknown command: $command";
-    }
-}
-
-sub _munge_command {
-    my $self = shift;
-    my $command = shift;
-    
-    $command =~ s/^\*//;
-    $command =~ s/\*$//;
-    $command =~ s/-/_/g;
-    return lc $command;
 }
 
 sub _next_row {
@@ -148,6 +102,22 @@ table have been run.
 
 sub end_hook {}
 
+=head2 handle_command( @row )
+
+Run the command.  Subclasses can override this.
+
+=cut
+
+sub handle_command {
+    my $self = shift;
+    my $command = shift;
+    $command =~ s/-/_/g;
+    die "Bad command for the fixture: ($command)\n"
+        unless $self->can($command);
+
+    $self->$command( $self->_munge_options(@_) );
+}
+
 sub _munge_options {
     my $self = shift;
 
@@ -159,6 +129,25 @@ sub _munge_options {
         push @opts, $var;
     }
     return @opts;
+}
+
+=head2 quote_as_regex( $option )
+
+Will convert an option to a regex.  If qr// is around the option text,
+the regex will not be escaped.  Be careful with your regexes.
+
+=cut
+
+sub quote_as_regex {
+    my $self = shift;
+    my $var = shift || '';
+
+    Encode::_utf8_on($var) unless Encode::is_utf8($var);
+    if ($var =~ qr{^qr/(.+?)/([imosx]*)$}) {
+        my $mods = $2 || 's';
+        return eval "qr/$1/$mods";
+    }
+    return qr/\Q$var\E/;
 }
 
 =head2 setup_table_variables

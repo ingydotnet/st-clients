@@ -69,6 +69,7 @@ Readonly my %ROUTES   => (
     person               => $BASE_URI . '/people/:pname',
     person_tag           => $BASE_URI . '/people/:pname/tags',
     signals              => $BASE_URI . '/signals',
+    webhooks             => $BASE_URI . '/webhooks',
 );
 
 field 'workspace';
@@ -1086,6 +1087,37 @@ sub post_signal {
         method  => 'POST',
         type    => "application/json",
         content => encode_json( { signal => $text } ),
+    );
+
+    my $location = $response->header('location');
+    $location = URI::Escape::uri_unescape($1);
+
+    if ( $status == 204 || $status == 201 ) {
+        return $location;
+    }
+    else {
+        die "$status: $content\n";
+    }
+}
+
+=head2 put_webhook
+
+    $Rester->put_webhook( %args )
+
+Creates a webhook.  Args will be encoded as JSON and put up.
+
+=cut
+
+sub put_webhook {
+    my $self = shift;
+    my %args = @_;
+
+    my $uri = $self->_make_uri('webhooks');
+    my ( $status, $content, $response ) = $self->_request(
+        uri     => $uri,
+        method  => 'PUT',
+        type    => "application/json",
+        content => encode_json( \%args ),
     );
 
     my $location = $response->header('location');
