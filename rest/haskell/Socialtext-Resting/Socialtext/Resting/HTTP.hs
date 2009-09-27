@@ -2,7 +2,7 @@ module Socialtext.Resting.HTTP where
 
 import Network.URI
 import Network.HTTP hiding (password)
-import Codec.Base64 (encode)
+import Codec.Binary.Base64.String (encode)
 import System (exitFailure)
 import Socialtext.Resting.Types
 import Socialtext.Resting.Templates (joinPathM)
@@ -64,7 +64,6 @@ accept_hdr = do
     mime <- asks accept
     return $ Header HdrAccept mime
 
-send_request :: Request -> IO Response
 send_request req = do
     either_response <- simpleHTTP req
     case (either_response) of

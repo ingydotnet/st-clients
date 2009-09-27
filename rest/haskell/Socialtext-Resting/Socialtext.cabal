@@ -1,17 +1,24 @@
 Name: Socialtext-Resting
-Version: 0.1
+Version: 0.1.1
 License: OtherLicense
 License-File: LICENSE
 Author: Matthew O'Connor <matthew.oconnor@socialtext.com>
+Maintainer: Audrey Tang <audrey.tang@socialtext.com>
 Synopsis: Library to access Socialtext REST API.
+Build-Type: Simple
 Build-Depends:
-    base,
+    base >= 3,
     haskell98,
-    HTTP == 0.4,
+    directory,
+    HTTP >= 4000,
     mtl,
+    base64-string,
     network
 Exposed-modules:
     Socialtext.Resting,
+    Socialtext.Resting.Config.CommandLine,
+    Socialtext.Resting.Config.File,
+    Socialtext.Resting.Config.Types,
     Socialtext.Resting.Control,
     Socialtext.Resting.HTTP,
     Socialtext.Resting.MimeTypes,
@@ -19,4 +26,5 @@ Exposed-modules:
     Socialtext.Resting.Templates,
     Socialtext.Resting.Types,
     Socialtext.Resting.User,
+    Socialtext.Resting.Settings,
     Socialtext.Resting.Workspace

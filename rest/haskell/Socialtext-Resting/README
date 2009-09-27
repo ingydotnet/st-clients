@@ -1,7 +1,4 @@
-
-You will need HTTP 0.4 installed.  Unfortunately, the newest HTTP package
-won't work.  If you use a Debian system you can get HTTP 0.4 by installing
-libghc6-http-dev
+You will need GHC 6.8 or later installed.
 
 To build the system you can just type "make".  There is a sample program
 provided in bin, which you can build by doing:
