@@ -158,7 +158,7 @@ sub edit_page {
         if ($@ =~ /412/) { # collision detected!
             print "A collision was detected.  I will merge the changes and "
                   . "re-open your editor.\nHit enter.\n";
-            <>;
+            sleep 2;
             print "Merging...\n";
             $orig_content = $self->_get_page($page);
             my $updated_file = _write_file(undef, $orig_content);
