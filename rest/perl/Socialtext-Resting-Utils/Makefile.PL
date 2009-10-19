@@ -13,7 +13,7 @@ WriteMakefile(
         'Test::More'          => 0,
         'Test::Mock::LWP'     => 0,
         'Getopt::Long'        => '2.36',
-        'JSON::XS'            => '2.1',
+        'JSON::XS'            => '2.01',
         'YAML'                => 0,
         'Crypt::CBC'          => 0,
         },
