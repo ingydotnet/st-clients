@@ -6,6 +6,7 @@ use Socialtext::Resting::Mock;
 use Socialtext::WikiFixture::TestUtils qw/fixture_ok/;
 use lib 't/lib';
 use Test::WWW::Selenium qw/$SEL/; # mocked
+use Test::Exception;
 
 BEGIN {
     use lib 'lib';
@@ -147,4 +148,61 @@ EOT
         is_deeply $plan->{fixture}{args}{comment}, [[$t->[1]]];
         is $plan->{fixture}{calls}{comment}, 1;
     }
+}
+
+Headers_die: {
+    $rester->put_page('Dier', <<EOT);
+* Fixture: Null
+| comment | pass here |
+^ Die here
+EOT
+    my $plan = Socialtext::WikiObject::TestPlan->new(
+        rester => $rester,
+        page => 'Dier',
+    );
+
+    dies_ok { $plan->run_tests } "Dies here";
+}
+
+Headers_done_testing: {
+    $rester->put_page('Liver', <<EOT);
+* Fixture: Null
+| comment | pass here |
+^ DONE_TESTING
+EOT
+    my $plan = Socialtext::WikiObject::TestPlan->new(
+        rester => $rester,
+        page => 'Liver',
+    );
+
+    lives_ok { $plan->run_tests } "Lives here";
+}
+
+Skip_all: {
+    $rester->put_page('Skipper', <<EOT);
+* Fixture: Null
+| comment | pass here |
+^ SKIP: until we've implemented this stuff
+| comment | skip me! |
+| comment | skip me too! |
+EOT
+    my $plan = Socialtext::WikiObject::TestPlan->new(
+        rester => $rester,
+        page => 'Skipper',
+    );
+    lives_ok { $plan->run_tests } "Skips";
+}
+
+TODO: {
+    $rester->put_page('todos', <<EOT);
+* Fixture: Null
+| comment | pass here |
+^ TODO: This is a todo
+^ TODO: This is another todo
+EOT
+    my $plan = Socialtext::WikiObject::TestPlan->new(
+        rester => $rester,
+        page => 'todos',
+    );
+    lives_ok { $plan->run_tests } "TODOs";
 }

@@ -109,7 +109,7 @@ sub testplan_ok {
     
     if ($args{should_die}) {
         eval { $plan->run_tests };
-        ok $@;
+        ok $@, "Dies";
     }
     else {
         $plan->run_tests;

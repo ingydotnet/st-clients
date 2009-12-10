@@ -87,21 +87,49 @@ sub run_tests {
     }
 
     my $fixture_class = $self->_fixture || $self->{default_fixture};
-    return unless $self->{table} and $fixture_class;
 
-    unless ($fixture_class =~ /::/) {
-        $fixture_class = "Socialtext::WikiFixture::$fixture_class";
+    if ($self->{table} and $fixture_class) {
+        unless ($fixture_class =~ /::/) {
+            $fixture_class = "Socialtext::WikiFixture::$fixture_class";
+        }
+
+        eval "require $fixture_class";
+        die "Can't load fixture $fixture_class $@\n" if $@;
+
+        $self->_raise_permissions;
+
+        $self->{fixture_args}{testplan} ||= $self;
+        my $fix = $fixture_class->new( %{ $self->{fixture_args} } );
+        $self->{fixture} = $fix;
+        $fix->run_test_table($self->{table});
     }
 
-    eval "require $fixture_class";
-    die "Can't load fixture $fixture_class $@\n" if $@;
+    $self->_check_headers;
+}
 
-    $self->_raise_permissions;
-
-    $self->{fixture_args}{testplan} ||= $self;
-    my $fix = $fixture_class->new( %{ $self->{fixture_args} } );
-    $self->{fixture} = $fix;
-    $fix->run_test_table($self->{table});
+sub _check_headers {
+    my $self = shift;
+    my $heads = $self->{headings};
+    if ($heads and @$heads) {
+        my $head = $heads->[0];
+        if ($head =~ /^done_testing$/i) {
+            # nothing
+        }
+        elsif ($head =~ /^skip(?:: (.*))?/i) {
+            my $msg = $1 || "Skip!";
+            my $skipped = $self->{$head} || [ 1 ];
+            SKIP: {
+                skip($msg, scalar @$skipped);
+            }
+        }
+        elsif ($head =~ /^todo(?:: (.*))?/i) {
+            local $TODO = $1 || "Unamed";
+            Test::More::fail();
+        }
+        else {
+            die "Stopped at '$head'\n";
+        }
+    }
 }
 
 sub _raise_permissions {
