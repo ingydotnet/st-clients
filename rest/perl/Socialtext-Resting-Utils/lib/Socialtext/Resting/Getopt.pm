@@ -32,12 +32,12 @@ sub get_rester {
     Getopt::Long::Configure('pass_through');
     GetOptions(
         \%opts,
-        's|server=s',
-        'w|workspace=s',
-        'u|username=s',
-        'p|password=s',
+        'server|s=s',
+        'workspace|w=s',
+        'username|u=s',
+        'password|p=s',
         'user_cookie=s',
-        'c|rester-config=s',
+        'rester-config|c=s',
     );
     Getopt::Long::Configure('no_pass_through');
     return Socialtext::Resting::DefaultRester->new(%opts);

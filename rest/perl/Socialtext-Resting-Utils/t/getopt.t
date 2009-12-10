@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 use strict;
 use warnings;
-use Test::More tests => 37;
+use Test::More tests => 51;
 
 BEGIN {
     use_ok 'Socialtext::Resting::Getopt', 'get_rester';
@@ -19,6 +19,11 @@ App_args: {
 Rester_options: {
     run_ok("--server foo", server => 'foo');
     run_ok("--workspace monkey", workspace => 'monkey');
+}
+
+Shorthand: {
+    run_ok("-s foo", server => 'foo');
+    run_ok("-w monkey", workspace => 'monkey');
 }
 
 sub run_ok {
