@@ -41,6 +41,9 @@ A song
 Food
 EOT
         expected => { 
+            headings => [
+                'Currently listening to', 'Getting oriented',
+            ],
             page => 'Test Page',
             rester => $rester,
             text => "Stuff\n",
@@ -75,6 +78,7 @@ EOT
                 items => [ 'Item 1', 'Item 2' ],
                 text => "Other text\nMore text\n",
             },
+            headings => ['Contact Info'],
         },
     );
 }
@@ -112,10 +116,10 @@ EOT
                 table => $table_two,
                 text => "These are some things I see:\n",
             },
+            headings => ['Other things'],
         },
     );
 }
-
 exit;
 
 sub object_ok {
@@ -249,6 +253,18 @@ EOT
             items => [
                 $storyboards,
             ],
+            headings => [
+                'Theme',
+                'People',
+                'Story Boards',
+                '[SetupApache]',
+                'Tasks',
+                '[ModPerl HelloWorld]',
+                'Tasks',
+                '[Styled Homepage]',
+                'Tasks',
+                'Other Information',
+            ],
         };
 
         push @data, {
@@ -297,6 +313,11 @@ EOT
             'top of the morning' => $morning_top,
             items => [
                 $morning_top,
+            ],
+            headings => [
+                'Top of the morning',
+                'Ball Tricks',
+                'Club Tricks',
             ],
         };
         push @data, {
