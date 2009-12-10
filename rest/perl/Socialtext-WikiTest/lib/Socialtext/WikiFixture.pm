@@ -73,6 +73,11 @@ sub run_test_table {
         $self->handle_command(@$row);
     }
 
+    my $heads = $self->{testplan}{headings};
+    if ($heads and @$heads) {
+        die "Stopped at '$heads->[0]'\n" unless $heads->[0] eq 'done_testing';
+    }
+
     $self->end_hook;
 }
 

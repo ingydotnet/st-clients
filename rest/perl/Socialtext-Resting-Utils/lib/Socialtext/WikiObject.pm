@@ -146,6 +146,7 @@ sub _add_heading {
     my $heading_level = length(shift || '') - $self->{heading_level_start};
     my $new_heading = shift;
     warn "hl=$heading_level hls=$self->{heading_level_start} ($new_heading)\n" if $DEBUG;
+    push @{$self->{headings}}, $new_heading;
 
     my $cur_heading = $self->{current_heading};
     while (@{$self->{parent_stack}} > $heading_level) {
