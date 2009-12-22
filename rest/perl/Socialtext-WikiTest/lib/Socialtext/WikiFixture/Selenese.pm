@@ -129,7 +129,7 @@ sub handle_command {
     my $self = shift;
     my $sel = $self->{selenium};
     my $command = $self->_munge_command(shift);
-    my ($opt1, $opt2) = $self->_munge_options(@_);
+    my ($opt1, $opt2, @other) = $self->_munge_options(@_);
 
     # Convenience method
     if ($command eq 'text_like' and !$opt2) {
@@ -149,7 +149,7 @@ sub handle_command {
     Encode::_utf8_on($opt2) unless Encode::is_utf8($opt2);
     # Try to guess _ok methods
     $command .= '_ok' if { map { $_ => 1 } qw(open type) }->{$command};
-    $self->$command($opt1, $opt2);
+    $self->$command($opt1, $opt2, @other);
 }
 
 sub _munge_command {

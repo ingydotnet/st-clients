@@ -7,6 +7,7 @@
  - Add the 'include' command to the base fixture
  - move non-selenium functions into the fixture base class
  - add a 'set_default' method that is like ||=
+ - Allow handle_command to pass through more than 2 args.
 
 0.06 - Thu Jun 21 15:47:13 PDT 2007
  - Fix a bug that prevented testing whether a value was "0"
