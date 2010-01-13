@@ -13,6 +13,7 @@ WriteMakefile(
         'Socialtext::EditPage'        => '0.04',
         'Socialtext::Resting::Getopt' => '0',
         'Curses::UI'                  => '0.95',
+        'JSON'                        => '0',
     },
     EXE_FILES           => ['bin/wikrad'],
     dist                => { COMPRESS => 'gzip -9f', SUFFIX => 'gz', },
