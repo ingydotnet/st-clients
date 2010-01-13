@@ -1,5 +1,8 @@
 Revision history for Socialtext-Utils
 
+0.21 - Tue Jan 12 19:54:04 PST 2010
+  - Add dependency on Crypt::DES
+
 0.20 - Tue Apr 21 13:46:23 PDT 2009
   - Add ability to use an NLW-user cookie instead of user/pass.
   - Bugfixes to better work with and without Crypt::CBC

@@ -16,6 +16,7 @@ WriteMakefile(
         'JSON::XS'            => '2.01',
         'YAML'                => 0,
         'Crypt::CBC'          => 0,
+        'Crypt::DES'          => 0,
         },
     EXE_FILES           => [
         'bin/wikedit', 
