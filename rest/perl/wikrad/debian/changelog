@@ -1,3 +1,9 @@
+libsocialtext-wikrad-perl (20100125-1264471008) socialtext; urgency=low
+
+  * new upstream version
+
+ --  <lukec@topaz.socialtext.net>  Mon, 25 Jan 2010 17:56:48 -0800
+
 libsocialtext-wikrad-perl (20090331-1238526205) socialtext; urgency=low
 
   * new upstream version

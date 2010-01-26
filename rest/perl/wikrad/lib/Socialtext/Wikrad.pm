@@ -232,7 +232,9 @@ sub _render_wikitext_wafls {
             $replace_text = "Stories matching '$term':\n";
             $r->query($term);
             $r->accept('text/plain');
+            $self->{cui}->status("Searching for '$term' ...");
             my @pages = $r->get_pages();
+            $self->{cui}->nostatus;
             $r->query(undef);
             $replace_text .= join("\n", map {"* [$_]" } @pages) . "\n";
         }
