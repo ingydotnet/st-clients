@@ -208,16 +208,35 @@ sub _setup_ui {
 sub _render_wikitext_wafls {
     my $self = shift;
     my $text = shift;
+    my $r = $self->{rester};
 
     if ($text =~ m/{st_(?:iteration|project)stories: <([^>]+)>}/) {
         my $tag = $1;
         my $replace_text = "Stories for tag: '$tag':\n";
         $self->{rester}->accept('text/plain');
-        my @pages = $self->{rester}->get_taggedpages($tag);
+        my @pages = $r->get_taggedpages($tag);
     
         $replace_text .= join("\n", map {"* [$_]"} @pages);
         $replace_text .= "\n";
         $text =~ s/{st_(?:iteration|project)stories: <[^>]+>}/$replace_text/;
+    }
+    while ($text =~ m/{st_searchvaluetable: ([^}]+)}/g) {
+        my ($start, $offset) = ($-[0], $+[0] - $-[0]);
+        my $option_str = $1;
+        my %opts;
+        my $replace_text = '';
+        while ($option_str =~ m/(\w+):<([^>]+)>/g) {
+            $opts{$1} = $2;
+        }
+        if (my $term = $opts{criteria}) {
+            $replace_text = "Stories matching '$term':\n";
+            $r->query($term);
+            $r->accept('text/plain');
+            my @pages = $r->get_pages();
+            $r->query(undef);
+            $replace_text .= join("\n", map {"* [$_]" } @pages) . "\n";
+        }
+        substr($text, $start, $offset) = $replace_text if $replace_text;
     }
 
     return $text;
