@@ -1,0 +1,3 @@
+#!/bin/bash
+
+rm err; perl -Ilib bin/wikrad -s https://www2.socialtext.net -w dev-tasks $1 2>> err; cat err
