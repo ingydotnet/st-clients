@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 use strict;
 use warnings;
-use Test::More tests => 135;
+use Test::More tests => 140;
 use Test::Mock::LWP;
 
 BEGIN {
@@ -93,6 +93,7 @@ Put_new_page: {
               $rester_opts{password},
             ],
             [ 'header' => 'Content-Type', 'text/x.socialtext-wiki' ],
+            [ 'header' => 'Content-Length' => 3 ],
             [ 'content' => 'bar' ],
         ],
         resp_calls => [
@@ -117,6 +118,7 @@ Put_existing_page: {
               $rester_opts{password},
             ],
             [ 'header' => 'Content-Type', 'text/x.socialtext-wiki' ],
+            [ 'header' => 'Content-Length' => 3 ],
             [ 'content' => 'bar' ],
         ],
         resp_calls => [
@@ -146,6 +148,7 @@ Put_existing_page_json: {
               $rester_opts{password},
             ],
             [ 'header' => 'Content-Type', 'application/json' ],
+            [ 'header' => 'Content-Length' => 17 ],
             [ 'content' => '{"content":"bar"}' ],
         ],
         resp_calls => [
@@ -203,6 +206,7 @@ Put_tag: {
             [ 'authorization_basic' => $rester_opts{username}, 
               $rester_opts{password},
             ],
+            [ 'header' => 'Content-Length' => 0 ],
         ],
         resp_calls => [
             [ 'code' ],
@@ -251,6 +255,7 @@ Collision_detection: {
             ],
             [ 'header' => 'Content-Type', 'text/x.socialtext-wiki' ],
             [ 'header' => 'If-Match', $Test::Mock::HTTP::Response::Headers{etag} ],
+            [ 'header' => 'Content-Length' => 3 ],
             [ 'content' => 'bar' ],
         ],
         resp_calls => [

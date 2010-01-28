@@ -11,7 +11,7 @@ use JSON::XS;
 
 use Readonly;
 
-our $VERSION = '0.28';
+our $VERSION = '0.29';
 
 =head1 NAME
 
@@ -1183,6 +1183,12 @@ sub _request {
     $request->header( 'Accept'       => $p{accept} )   if $p{accept};
     $request->header( 'Content-Type' => $p{type} )     if $p{type};
     $request->header( 'If-Match'     => $p{if_match} ) if $p{if_match};
+    if ($p{method} eq 'PUT') {
+        my $content_len = 0;
+        $content_len = do { use bytes; length $p{content} } if $p{content};
+        $request->header( 'Content-Length' => $content_len );
+    }
+
     if (my $cookie = $self->cookie) {
         $request->header('cookie' => $cookie);
     }
