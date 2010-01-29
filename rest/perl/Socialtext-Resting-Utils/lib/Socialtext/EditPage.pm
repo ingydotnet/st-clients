@@ -94,6 +94,10 @@ The page will not be uploaded to the server.
 
 If specified, this page will be used as the template for a new page.
 
+=item line
+
+If specified, the editor will be sent to this line to begin editing.
+
 =back
 
 =cut
@@ -264,7 +268,26 @@ sub _edit_content {
     _write_file($filename, $content);
     my $editor   = $ENV{EDITOR} || '/usr/bin/vim';
 
-    system( $editor, $filename );
+    if (defined $self->{command} and $editor =~ /vi/) {
+        my $c = $self->{command};
+        if ($c eq 'o') {
+            system $editor, "+normal gg$self->{line}Go", "+startinsert", $filename;
+        }
+        elsif ($c eq 'i') {
+            system $editor, "+normal gg$self->{line}G$self->{col}|", "+startinsert", $filename;
+        }
+        elsif ($c eq 'a') {
+            system $editor, "+normal gg$self->{line}G$self->{col}|l", "+startinsert", $filename;
+        }
+        elsif ($c eq 'A') {
+            system $editor, "+normal gg$self->{line}G", "+startinsert!", $filename;
+        }
+        else {
+            system( $editor, $filename );
+        }
+    } else {
+        system( $editor, $filename );
+    }
 
     return _read_file($filename);
 }

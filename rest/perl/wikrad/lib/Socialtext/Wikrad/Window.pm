@@ -8,12 +8,14 @@ use Socialtext::Resting;
 use Socialtext::EditPage;
 use JSON;
 use Data::Dumper;
+use YAML ();
 
 sub new {
     my $class = shift;
     my $self  = $class->SUPER::new(@_);
 
     $self->_create_ui_widgets;
+    $self->read_config;
 
     my ($v, $p, $w, $t) = map { $self->{$_} } 
                           qw/viewer page_box workspace_box tag_box/;
@@ -23,7 +25,19 @@ sub new {
     $v->set_binding( \&show_help,                '?' );
     $v->set_binding( \&recently_changed,         'r' );
     $v->set_binding( \&show_uri,                 'u' );
-    $v->set_binding( \&show_includes,            'i' );
+    if ($self->{config}{vim_insert_keys_start_vim}) {
+        for my $key qw(i a o A) {
+            $v->set_binding( sub { editor(
+                command => $key,
+                line => $v->{-ypos} + 1,
+                col => $v->{-xpos} + 1,
+            ) }, $key );
+        }
+        $v->set_binding( \&show_includes,        'I' );
+    }
+    else {
+        $v->set_binding( \&show_includes,        'i' );
+    }
     $v->set_binding( \&clone_page,               'c' );
     $v->set_binding( \&clone_page_from_template, 'C' );
     $v->set_binding( \&show_metadata,            'm' );
@@ -576,6 +590,14 @@ sub add_field {
     );
     $w->set_binding( sub { $cb->($w) }, KEY_ENTER );
     return $w;
+}
+
+sub read_config {
+    my $self = shift;
+    my $file = "$ENV{HOME}/.wikradrc";
+
+    return unless -r $file;
+    $self->{config} = YAML::LoadFile($file);
 }
 
 1;
