@@ -270,7 +270,10 @@ sub _edit_content {
 
     if (defined $self->{command} and $editor =~ /vi/) {
         my $c = $self->{command};
-        if ($c eq 'o') {
+        if ($c eq 'e') {
+            system $editor, "+normal gg$self->{line}G$self->{col}|", $filename;
+        }
+        elsif ($c eq 'o') {
             system $editor, "+normal gg$self->{line}Go", "+startinsert", $filename;
         }
         elsif ($c eq 'i') {

@@ -47,8 +47,17 @@ sub new {
     $v->set_binding( \&save_to_file,             'W' );
     $v->set_binding( \&search,                   's' );
 
-    $v->set_binding( sub { editor() },                  'e' );
-    $v->set_binding( sub { editor(pull_includes => 1) }, 'E' );
+    $v->set_binding( sub { editor(
+        command => 'e',
+        line => $v->{-ypos} + 1,
+        col => $v->{-xpos} + 1,
+    ) }, 'e' );
+    $v->set_binding( sub { editor(
+        pull_includes => 1,
+        command => 'e',
+        line => $v->{-ypos} + 1,
+        col => $v->{-xpos} + 1,
+    ) }, 'E' );
     $v->set_binding( sub { $v->focus },                 'v' );
     $v->set_binding( sub { $p->focus; $self->{cb}{page}->($p) },      'p' );
     $v->set_binding( sub { $w->focus; $self->{cb}{workspace}->($w) }, 'w' );
