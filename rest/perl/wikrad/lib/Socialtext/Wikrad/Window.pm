@@ -303,7 +303,6 @@ sub editor {
     $App->{cui}->status('Editing page');
     $App->{cui}->leave_curses;
     my $tags = delete $extra_args{tags};
-    my $prompt = $App->{config}{prompt_for_summary};
 
     my $ep = Socialtext::EditPage->new( 
         rester => $App->{rester},
@@ -313,7 +312,7 @@ sub editor {
     $ep->edit_page(
         page => $page,
         ($tags ? (tags => $tags) : ()),
-        ($prompt ? (
+        ($App->{config}{prompt_for_summary} ? (
             summary_callback => sub {
                 $App->{cui}->reset_curses;
 
