@@ -8,7 +8,7 @@ use Socialtext::Resting;
 use Socialtext::EditPage;
 use JSON;
 use Data::Dumper;
-use YAML ();
+use YAML::XS ();
 
 sub new {
     my $class = shift;
@@ -25,7 +25,7 @@ sub new {
     $v->set_binding( \&show_help,                '?' );
     $v->set_binding( \&recently_changed,         'r' );
     $v->set_binding( \&show_uri,                 'u' );
-    if ($self->{config}{vim_insert_keys_start_vim}) {
+    if ($App->{config}{vim_insert_keys_start_vim}) {
         for my $key qw(i a o A) {
             $v->set_binding( sub { editor(
                 command => $key,
@@ -303,6 +303,7 @@ sub editor {
     $App->{cui}->status('Editing page');
     $App->{cui}->leave_curses;
     my $tags = delete $extra_args{tags};
+    my $prompt = $App->{config}{prompt_for_summary};
 
     my $ep = Socialtext::EditPage->new( 
         rester => $App->{rester},
@@ -312,25 +313,27 @@ sub editor {
     $ep->edit_page(
         page => $page,
         ($tags ? (tags => $tags) : ()),
-        summary_callback => sub {
-            $App->{cui}->reset_curses;
+        ($prompt ? (
+            summary_callback => sub {
+                $App->{cui}->reset_curses;
 
-            my $question = q{Edit summary? (Put '* ' at the front to }
-                         . q{also signal it!).};
-            my $summary = $App->{cui}->question($question);
-            if ($summary and $summary =~ s/^\*\s//) {
-                eval { # server may not support it, so fail silently.
-                    my $wksp = $App->{rester}->workspace;
-                    my $signal = qq{"$summary" (edited {link: $wksp [$page]})};
-                    $App->{cui}->status('Squirelling away signal');
-                    $App->{rester}->post_signal($signal);
-                };
-                warn $@ if $@;
+                my $question = q{Edit summary? (Put '* ' at the front to }
+                             . q{also signal it!).};
+                my $summary = $App->{cui}->question($question);
+                if ($summary and $summary =~ s/^\*\s//) {
+                    eval { # server may not support it, so fail silently.
+                        my $wksp = $App->{rester}->workspace;
+                        my $signal = qq{"$summary" (edited {link: $wksp [$page]})};
+                        $App->{cui}->status('Squirelling away signal');
+                        $App->{rester}->post_signal($signal);
+                    };
+                    warn $@ if $@;
+                }
+
+                $App->{cui}->leave_curses;
+                return $summary;
             }
-
-            $App->{cui}->leave_curses;
-            return $summary;
-        },
+        ) : ()),
     );
 
     $App->{cui}->reset_curses;
@@ -605,8 +608,15 @@ sub read_config {
     my $self = shift;
     my $file = "$ENV{HOME}/.wikradrc";
 
-    return unless -r $file;
-    $self->{config} = YAML::LoadFile($file);
+    $App->{config} = {
+        prompt_for_summary => 1,
+        vim_insert_keys_start_vim => 0,
+        %{
+            -r $file
+            ? YAML::XS::LoadFile($file)
+            : {}
+        },
+    };
 }
 
 1;
